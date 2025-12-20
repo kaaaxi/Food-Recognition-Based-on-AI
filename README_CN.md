@@ -87,10 +87,6 @@ python-dotenv>=1.0.0
 
 下载预训练模型并放置到 `backend/models/` 目录：
 
-1. **Food101-Classifier**：从 Hugging Face 仓库下载 `food101_model.pth`
-2. **SAM-HQ**：下载 `model.safetensors`、`config.json`、`preprocessor_config.json`
-3. **DPT-Hybrid-MiDaS**：下载 `config.json`、`preprocessor_config.json`
-
 ## 运行应用
 
 ### 后端

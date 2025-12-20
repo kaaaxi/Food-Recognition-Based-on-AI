@@ -87,10 +87,6 @@ Create a `.env` file or set the following environment variables:
 
 Download the pre-trained models and place them in `backend/models/`:
 
-1. **Food101-Classifier**: Download `food101_model.pth` from the Hugging Face repo
-2. **SAM-HQ**: Download `model.safetensors`, `config.json`, `preprocessor_config.json`
-3. **DPT-Hybrid-MiDaS**: Download `config.json`, `preprocessor_config.json`
-
 ## Running the Application
 
 ### Backend
