@@ -5,11 +5,6 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT,
     salt TEXT,
     password_hash TEXT,
-    height_cm NUMERIC,
-    weight_kg NUMERIC,
-    age INTEGER,
-    gender TEXT,
-    activity_level TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
