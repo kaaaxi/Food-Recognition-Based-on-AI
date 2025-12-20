@@ -37,3 +37,7 @@ venv/
 # Tests / coverage
 coverage/
 .pytest_cache/
+
+# Large model binaries (keep locally, don't commit)
+backend/models/dpt-hybrid-midas/pytorch_model.bin
+backend/models/sam-hq-vit-base/model.safetensors
