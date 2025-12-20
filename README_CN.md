@@ -91,6 +91,7 @@ python-dotenv>=1.0.0
 
 ### 后端
 ```bash
+cd backend
 uvicorn app.main:app --reload
 ```
 

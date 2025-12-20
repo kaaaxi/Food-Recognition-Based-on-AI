@@ -91,6 +91,7 @@ Download the pre-trained models and place them in `backend/models/`:
 
 ### Backend
 ```bash
+cd backend
 uvicorn app.main:app --reload
 ```
 
