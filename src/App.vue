@@ -409,21 +409,34 @@ async function uploadImage(file) {
 
 async function loadHistory() {
   try {
-    const token = localStorage.getItem('accessToken')
+    let token = localStorage.getItem('accessToken')
     if (!token) {
       history.value = []
       return
     }
-    const headers = { Authorization: `Bearer ${token}` }
     let url = `${apiBase}/history?limit=50`
     if (historyStartDate.value) url += `&start_date=${historyStartDate.value}`
     if (historyEndDate.value) url += `&end_date=${historyEndDate.value}`
-    const res = await fetch(url, { headers })
+    
+    let res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    
+    // If token expired, try to refresh
     if (res.status === 401) {
-      history.value = []
-      return
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        token = localStorage.getItem('accessToken')
+        res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      } else {
+        history.value = []
+        return
+      }
     }
-    history.value = await res.json()
+    
+    if (res.ok) {
+      history.value = await res.json()
+    } else {
+      history.value = []
+    }
   } catch (error) {
     console.error(error)
     history.value = []
@@ -460,13 +473,56 @@ async function handleAuth() {
   }
 }
 
+// Refresh access token using refresh token
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem('refreshToken')
+  if (!refreshToken) return false
+  
+  try {
+    const res = await fetch(`${apiBase}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      localStorage.setItem('accessToken', data.access_token)
+      localStorage.setItem('refreshToken', data.refresh_token)
+      return true
+    } else {
+      // Refresh token also expired, need to re-login
+      return false
+    }
+  } catch (e) {
+    console.error('Failed to refresh token:', e)
+    return false
+  }
+}
+
 async function loadCurrentUser() {
   const token = localStorage.getItem('accessToken')
   if (!token) return
   try {
-    const res = await fetch(`${apiBase}/auth/me`, {
+    let res = await fetch(`${apiBase}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
+    
+    // If token expired, try to refresh
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        // Retry with new token
+        const newToken = localStorage.getItem('accessToken')
+        res = await fetch(`${apiBase}/auth/me`, {
+          headers: { Authorization: `Bearer ${newToken}` }
+        })
+      } else {
+        // Refresh failed, logout user
+        logout()
+        return
+      }
+    }
+    
     if (res.ok) {
       currentUser.value = await res.json()
     }
@@ -528,13 +584,26 @@ async function submitManual() {
 }
 
 async function deleteHistoryRecord(id) {
-  const token = localStorage.getItem('accessToken')
+  let token = localStorage.getItem('accessToken')
   if (!token) return
   try {
-    await fetch(`${apiBase}/history/${id}`, {
+    let res = await fetch(`${apiBase}/history/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     })
+    
+    // If token expired, try to refresh
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        token = localStorage.getItem('accessToken')
+        await fetch(`${apiBase}/history/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      }
+    }
+    
     showDeleteConfirm.value = null
     await loadHistory()
   } catch (error) {
@@ -544,9 +613,9 @@ async function deleteHistoryRecord(id) {
 
 async function saveEditedRecord() {
   if (!editingRecord.value) return
-  const token = localStorage.getItem('accessToken')
+  let token = localStorage.getItem('accessToken')
   try {
-    await fetch(`${apiBase}/history/${editingRecord.value.id}`, {
+    let res = await fetch(`${apiBase}/history/${editingRecord.value.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -560,6 +629,29 @@ async function saveEditedRecord() {
         carbs: editingRecord.value.carbs,
       }),
     })
+    
+    // If token expired, try to refresh
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        token = localStorage.getItem('accessToken')
+        await fetch(`${apiBase}/history/${editingRecord.value.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            dish_name: editingRecord.value.dish_name,
+            calories: editingRecord.value.calories,
+            protein: editingRecord.value.protein,
+            fat: editingRecord.value.fat,
+            carbs: editingRecord.value.carbs,
+          }),
+        })
+      }
+    }
+    
     editingRecord.value = null
     await loadHistory()
   } catch (error) {
@@ -583,12 +675,26 @@ async function calculateTDEE() {
 }
 
 async function loadHealthReport() {
-  const token = localStorage.getItem('accessToken')
+  let token = localStorage.getItem('accessToken')
   if (!token) return
   try {
-    const res = await fetch(`${apiBase}/health/report?period=${trendPeriod.value}`, {
+    let res = await fetch(`${apiBase}/health/report?period=${trendPeriod.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
+    
+    // If token expired, try to refresh
+    if (res.status === 401) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        token = localStorage.getItem('accessToken')
+        res = await fetch(`${apiBase}/health/report?period=${trendPeriod.value}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      } else {
+        return
+      }
+    }
+    
     if (res.ok) {
       healthReport.value = await res.json()
     }
