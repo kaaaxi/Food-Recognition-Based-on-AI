@@ -56,19 +56,19 @@ This project uses the following pre-trained models from Hugging Face:
 
 ### Python Dependencies
 ```
-fastapi>=0.100.0
-uvicorn>=0.20.0
-torch>=2.0.0
-torchvision>=0.15.0
-transformers>=4.30.0
-Pillow>=10.0.0
-numpy>=1.24.0
-openai>=1.0.0
-python-multipart>=0.0.6
-httpx>=0.24.0
-safetensors>=0.4.0
-timm>=0.9.0
-python-dotenv>=1.0.0
+fastapi==0.124.4
+uvicorn==0.38.0
+torch==2.2.2+cu121
+torchvision==0.17.2+cu121
+transformers==4.57.3
+Pillow==11.3.0
+numpy==1.26.4
+openai==2.11.0
+python-multipart==0.0.20
+httpx==0.28.1
+safetensors==0.7.0
+timm==1.0.22
+python-dotenv==1.2.1
 ```
 
 ### Environment Variables
